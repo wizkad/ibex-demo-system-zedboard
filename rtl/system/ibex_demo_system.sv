@@ -23,11 +23,18 @@ module ibex_demo_system #(
   input  logic [GpiWidth-1:0] gp_i,
   output logic [GpoWidth-1:0] gp_o,
   output logic [PwmWidth-1:0] pwm_o,
-  input  logic                uart_rx_i,
-  output logic                uart_tx_o,
+  input  logic                uart_rxd_out,
+  output logic                uart_txd_in,
   input  logic                spi_rx_i,
   output logic                spi_tx_o,
-  output logic                spi_sck_o
+  output logic                spi_sck_o,
+  //Ram writing signals
+  input logic   [31:0]        data_spi_i,
+  input logic   [31:0]        addr_spi_i,
+  input logic   [3:0]         b_en_i,
+  input logic                 en_i,
+  input logic                 req_i,
+  output logic                a_rvalid_o
 );
   localparam logic [31:0] MEM_SIZE      = 64 * 1024; // 64 KiB
   localparam logic [31:0] MEM_START     = 32'h00100000;
@@ -123,13 +130,13 @@ module ibex_demo_system #(
   logic [31:0] mem_instr_rdata;
   logic        dbg_instr_req;
 
-  logic        dbg_slave_req;
-  logic [31:0] dbg_slave_addr;
-  logic        dbg_slave_we;
-  logic [ 3:0] dbg_slave_be;
-  logic [31:0] dbg_slave_wdata;
-  logic        dbg_slave_rvalid;
-  logic [31:0] dbg_slave_rdata;
+  logic        dbg_slave_req;		
+  logic [31:0] dbg_slave_addr;		
+  logic        dbg_slave_we;		
+  logic [ 3:0] dbg_slave_be;		
+  logic [31:0] dbg_slave_wdata;		
+  logic        dbg_slave_rvalid;	
+  logic [31:0] dbg_slave_rdata;		
 
   // Internally generated resets cause IMPERFECTSCH warnings
   /* verilator lint_off IMPERFECTSCH */
@@ -169,6 +176,9 @@ module ibex_demo_system #(
   assign device_err[Uart]    = 1'b0;
   assign device_err[Spi]     = 1'b0;
   assign device_err[SimCtrl] = 1'b0;
+
+  
+  
 
   bus #(
     .NrDevices    ( NrDevices ),
@@ -287,6 +297,22 @@ module ibex_demo_system #(
     .core_sleep_o          ()
   );
 
+  //Ram signal management
+  logic [31:0]	a_addr;  
+  logic [31:0]	a_wdata;
+  logic [3:0]	byte_en;
+  logic enable;
+  logic request;
+  logic a_rvalid_w;
+  assign a_addr = device_addr[Ram] | addr_spi_i;
+  assign a_wdata = device_wdata[Ram] | data_spi_i;
+  assign byte_en = device_be[Ram] | b_en_i;
+  assign enable = device_we[Ram] | en_i;
+  assign request = device_req[Ram] | req_i;
+  assign device_rvalid[Ram] = a_rvalid_w;
+  assign a_rvalid_o = a_rvalid_w;
+  
+  
   ram_2p #(
       .Depth       ( MEM_SIZE / 4 ),
       .MemInitFile ( SRAMInitFile )
@@ -294,12 +320,12 @@ module ibex_demo_system #(
     .clk_i       (clk_sys_i),
     .rst_ni      (rst_sys_ni),
 
-    .a_req_i     (device_req[Ram]),
-    .a_we_i      (device_we[Ram]),
-    .a_be_i      (device_be[Ram]),
-    .a_addr_i    (device_addr[Ram]),
-    .a_wdata_i   (device_wdata[Ram]),
-    .a_rvalid_o  (device_rvalid[Ram]),
+    .a_req_i     (request),
+    .a_we_i      (enable),
+    .a_be_i      (byte_en),
+    .a_addr_i    (a_addr),
+    .a_wdata_i   (a_wdata),
+    .a_rvalid_o  (a_rvalid_w),
     .a_rdata_o   (device_rdata[Ram]),
 
     .b_req_i     (mem_instr_req),
@@ -363,9 +389,9 @@ module ibex_demo_system #(
     .device_rvalid_o(device_rvalid[Uart]),
     .device_rdata_o (device_rdata[Uart]),
 
-    .uart_rx_i,
+    .uart_rx_i      (uart_rxd_out),
     .uart_irq_o     (uart_irq),
-    .uart_tx_o
+    .uart_tx_o      (uart_txd_in)	    
   );
 
   spi_top #(
