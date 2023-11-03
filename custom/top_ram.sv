@@ -1,4 +1,6 @@
-module top_ram (
+module top_ram #(
+	parameter 					WIDTH = 32
+) (
 	input logic     	  clk_sys,
 	input logic     	  rst_sys_n,
 	input logic         a_rvalid_i,
@@ -15,53 +17,63 @@ module top_ram (
 	output logic	    	en_o,
 	output logic	    	req_o
 );
-  logic			        	read_enable;		
+  logic			        	read_enable;	
+  logic 							write_enable;	
   logic				        rx_ack;
   logic	[31:0]		    tx_ram;
   logic				        empty;
   logic               done;
-  logic [31:0]        RxData;
+  logic [WIDTH-1:0]        RxData;
   
-  ram_fifo u_ram_fifo(
+ram_fifo #(
+  .DEPTH(16),
+  .WIDTH(WIDTH)
+) u_ram_fifo(
 	.clk_sys_i		      (clk_sys),
-	.rst_sys_ni		      (rst_sys_n),
-	.write_enable_i	    (done),
+  .rst_sys_ni		      (rst_sys_n),
+	.write_enable_i	    (write_enable),
 	.read_enable_i	    (read_enable),
 	.data_in 		        (RxData),
 	.rx_ack_o		        (rx_ack),
 	.empty_o		        (empty),
-	.full_o			        (1'b0),
+	.full_o			        (),
 	.data_out 		      (tx_ram)
 );
 
- ram_config u_ram_config(
- 	.clk_sys_i		      (clk_sys),
+ram_config u_ram_config(
+  .clk_sys_i		      (clk_sys),
  	.rst_sys_ni		      (rst_sys_n),
  	.rx_ack_i		        (rx_ack),
- 	.SS                 (SS),
  	.a_rvalid		        (a_rvalid_i),
  	.data_in		        (tx_ram),
- 	.empty_i		        (empty),
- 	.en				          (en_o),
+ 	.empty_ni		        (empty),
+ 	.we_o				        (en_o),
  	.read_enable_o	    (read_enable),
  	.req			          (req_o),
  	.rst_n			        (rst_no),
  	.addr			          (addr_o),
  	.data_out		        (data_o),
  	.b_en			          (b_en_o)
- );
- spi_slave #(
-  .DATA_WIDTH(32)
- ) u_spi_slave (
-  .Clk                (clk_sys),          
-  .MODE               (MODE),
-  .TxData             (),      
-  .Done               (done),       
-  .RxData             (RxData),       
+);
+
+spi_slave #(
+  .DATA_WIDTH(WIDTH)
+) u_spi_slave (
+   .Clk               (clk_sys),                            
+   .MODE              (MODE),
+   .TxData            (),                           // Transmit Data
+   .Done              (done),                             // Transmit Completed
+   .RxData            (RxData),                                // Receive Data
 // SPI Interface Signals
-  .SClk               (SCLK),     
-  .MOSI               (MOSI),        
-  .SS                 (SS),         
-  .MISO               (MISO)       
- );
+   .SClk              (SCLK),                           // SPI clock
+   .MOSI              (MOSI),                           // Master Out Slave In
+   .SS                (SS),                           // Slave Select
+   .MISO              (MISO)
+);
+edge_detc u_edge_detc(
+  .clk                (clk_sys),
+  .signal             (done),
+  .edge_o             (write_enable)
+);
+
 endmodule

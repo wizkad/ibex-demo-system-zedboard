@@ -1,21 +1,23 @@
-module ram_fifo (
+module ram_fifo #(
+  DEPTH = 16, // Depth of the circular FIFO
+  WIDTH = 32 // Data width of 32 bits
+) (
 //system clk and rst_n
- input	logic	  clk_sys_i,
- input 	logic	  rst_sys_ni,
+ input	logic	  clk_sys_i,			//general clock
+ input 	logic	  rst_sys_ni,			//general reset
 
 //Input
- input  	logic   	write_enable_i,
- input		logic   	read_enable_i,
- input		logic	[31:0]  data_in,
+ input  	logic   	write_enable_i,	//write enable input
+ input		logic   	read_enable_i,	//read enable input
+ input		logic	[WIDTH-1:0]  data_in,	//data input
 //Output 
- output		logic   	rx_ack_o,
- output		logic   	empty_o,
- output		logic   	full_o,
- output		logic	[31:0]  data_out
+ output		logic   	rx_ack_o,	//read acknowledge
+ output		logic   	empty_o,	//empty output signal
+ output		logic   	full_o,		//full output signal
+ output		logic	[31:0]  data_out	//data out
 );
 
-  localparam DEPTH = 12; // Depth of the circular FIFO
-  localparam  int unsigned WIDTH = 32; // Data width of 32 bits
+  
   reg [WIDTH-1:0] fifo [0:DEPTH-1];
   reg [3:0] write_ptr;
   reg [3:0] read_ptr;

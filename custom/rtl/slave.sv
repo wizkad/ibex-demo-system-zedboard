@@ -1,90 +1,92 @@
-module spi_slave #(
-    parameter                     DATA_WIDTH = 32
- ) (
-    input logic                   Clk,          // System (or FPGA) clock.
-    input logic [1:0]             MODE,
-    input logic [DATA_WIDTH-1:0]  TxData,       // Transmit Data
+module spi_slave
+    #(
+      parameter DATA_WIDTH = 8
+     )
 
-    output logic                  Done,         // Transmit Completed
-    output logic [DATA_WIDTH-1:0] RxData,       // Receive Data
+    (
+      input Clk,                            // System (or FPGA) clock.
+      input [1:0] MODE,
+      input [DATA_WIDTH-1:0] TxData,        // Transmit Data
+
+      output Done,                          // Transmit Completed
+      output reg [DATA_WIDTH-1:0] RxData,   // Receive Data
 
 // SPI Interface Signals
-    input  logic                  SClk,         // SPI clock
-    input  logic                  MOSI,         // Master Out Slave In
-    input  logic                  SS,           // Slave Select
-    output logic                  MISO          // Master In Slave Out
+      input  SClk,                          // SPI clock
+      input  MOSI,                          // Master Out Slave In
+      input  SS,                            // Slave Select
+      output MISO                           // Master In Slave Out
     );
 
-    logic                         ClkPol;
-    logic                         ClkPha;
-// reg  Dout;
-    logic                         Dout;
-    logic                         capture_en;
-    logic                         shift_en;
+    wire ClkPol;
+    wire ClkPha;
+//    reg  Dout;
+    wire Dout;
+    reg  capture_en;
+    reg  shift_en;
 
 // Bit counter
-    logic [DATA_WIDTH-1:0]        bitcnt;
-    logic                         bitcnt_en;
+    reg [DATA_WIDTH-1:0] bitcnt;
+    reg                  bitcnt_en;
 
-    logic [1:0] current_state, next_state;
+    reg [1:0] current_state, next_state;
 
 // FSM States to capture or shift data
-    localparam                    IDLE  = 2'b11,
-                                  BEGIN = 2'b10,
-                                  LEAD  = 2'b01,
-                                  TRAIL = 2'b00;
+    localparam  IDLE  = 2'b11,
+                BEGIN = 2'b10,
+                LEAD  = 2'b01,
+                TRAIL = 2'b00;
 
 // Generate polarity & phase signals for the various SPI modes
-
 // Clock Polarity. 0=Idle at '0' with pulse of '1'.
 //                 1=Idle at '1' with pulse of '0'
     assign ClkPol = (MODE[1:0] == 2'b10) || (MODE[1:0] == 2'b11);
-    
 // Clock Phase. 0=Change data on trailing edge, capture on leading edge.
 //              1=Change data on leading edge, capture on trailing edge.
     assign ClkPha = (MODE[1:0] == 2'b01) || (MODE[1:0] == 2'b11);
 
 // Slave shift register
-    logic [DATA_WIDTH-1:0] txreg;
+    reg [DATA_WIDTH-1:0] txreg;
 
     assign MISO = (SS) ? 1'bz: Dout;
     assign Dout = txreg[DATA_WIDTH-1];
 
 // Next-state logic for FSM
-    always @(current_state or ClkPol or SClk or SS) begin
-      case (current_state)
-        IDLE: if (SS) 
-                next_state <= IDLE;
-              else
-                next_state <= BEGIN;
-        BEGIN: begin
-                if ({ClkPol, SClk} == 2'b00 || {ClkPol, SClk} == 2'b11) begin
+    always @ ( current_state or ClkPol or SClk or SS )
+      begin
+        case ( current_state )
+          IDLE: if ( SS )
+                  next_state <= IDLE;
+                else
+                  next_state <= BEGIN;
+          BEGIN: begin
+                   if ( {ClkPol, SClk} == 2'b00 || {ClkPol, SClk} == 2'b11 ) begin
                      next_state <= BEGIN;
-                 end else begin
-                   next_state <= LEAD;
+                   end else begin
+                     next_state <= LEAD;
+                   end
                  end
-                end
-        LEAD: begin
-                if ({ClkPol, SClk} == 2'b00 || {ClkPol, SClk} == 2'b11) begin
-                  next_state <= TRAIL;
-                 end else begin
-                   next_state <= LEAD;
-                 end
-                end
-        TRAIL: begin
-                 if ({ClkPol, SClk} == 2'b00 || {ClkPol, SClk} == 2'b11) begin
-                   next_state <= TRAIL;
+          LEAD: begin
+                  if ( {ClkPol, SClk} == 2'b00 || {ClkPol, SClk} == 2'b11 ) begin
+                    next_state <= TRAIL;
                   end else begin
                     next_state <= LEAD;
                   end
                 end
+          TRAIL: begin
+                   if ( {ClkPol, SClk} == 2'b00 || {ClkPol, SClk} == 2'b11 ) begin
+                     next_state <= TRAIL;
+                   end else begin
+                     next_state <= LEAD;
+                   end
+                 end
         endcase
       end
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Update State machine
     always @ (posedge Clk)
-      if (SS == 1'b1) begin
+      if ( SS == 1'b1 ) begin
         current_state <= IDLE;
         bitcnt <= {DATA_WIDTH{1'b0}};
         txreg <= TxData;
@@ -93,12 +95,12 @@ module spi_slave #(
       end else begin
         current_state <= next_state;
 // bitcnt_en is asserted in the trailing edge. bitcnt is shifted left with bitcnt_en asserted.
-        if (bitcnt_en == 1'b1)
+        if ( bitcnt_en == 1'b1 )
           bitcnt <= {bitcnt[DATA_WIDTH-2:0], 1'b1};
         else
           bitcnt <= bitcnt;
 
-        if (capture_en == 1'b1) begin
+        if ( capture_en == 1'b1 ) begin
           RxData <= {RxData[DATA_WIDTH-2:0], MOSI};
         end else begin
           RxData <= RxData;
@@ -108,7 +110,7 @@ module spi_slave #(
 //          Dout <= TxData[DATA_WIDTH-1];
 //          txreg <= TxData;
 //        end else
-        if (shift_en == 1'b1) begin
+        if ( shift_en == 1'b1 ) begin
           txreg <= {txreg[DATA_WIDTH-2:0], 1'b0};
 //          Dout <= txreg[DATA_WIDTH-1];
 //          $display("SS=0 shift_en=1----%0t txreg:%0x Dout:%0x", $time, txreg, Dout);
@@ -124,7 +126,7 @@ module spi_slave #(
     assign Done = bitcnt[DATA_WIDTH-1];
 
 // bitcnt_en logic
-    always @ (current_state or next_state)
+    always @ ( current_state or next_state )
       begin
         if ( current_state == LEAD && next_state == TRAIL )
           bitcnt_en <= 1'b1;
@@ -133,18 +135,18 @@ module spi_slave #(
       end
 
 // Generating capture_en to capture data into RxData base on next_state
-    always @ (next_state or current_state or ClkPha)
+    always @ ( next_state or current_state or ClkPha )
       begin
-          case (next_state)
+          case ( next_state )
             IDLE : capture_en <= 1'b0;
             BEGIN: capture_en <= 1'b0;
-            LEAD : if (current_state == BEGIN && ClkPha == 1'b0)
+            LEAD : if ( current_state == BEGIN && ClkPha == 1'b0 )
                      capture_en <= 1'b1;
-                   else if (current_state == TRAIL && ClkPha == 1'b0)
+                   else if ( current_state == TRAIL && ClkPha == 1'b0 )
                      capture_en <= 1'b1;
                    else
                      capture_en <= 1'b0;
-            TRAIL: if (current_state == LEAD && ClkPha == 1'b1)
+            TRAIL: if ( current_state == LEAD && ClkPha == 1'b1 )
                      capture_en <= 1'b1;
                    else
                      capture_en <= 1'b0;
@@ -153,20 +155,23 @@ module spi_slave #(
 
 
 // Generating txreg based on next_state
-      always @ (next_state or current_state or ClkPha) begin
-        case (next_state)
-          IDLE : shift_en <= 1'b0;  // Load the transmit data into Slave shift register
-          BEGIN: shift_en <= 1'b0;  // Make sure that data is available before the leading edge for CPHA=0
-          LEAD : if ((current_state == TRAIL) && (ClkPha == 1'b1))
-          	      shift_en <= 1'b1;
-                 else
-                   shift_en <= 1'b0;
-          TRAIL: if ((current_state == LEAD) && (ClkPha == 1'b0))
-                   shift_en <= 1'b1;
-                 else
-                   shift_en <= 1'b0;
-         endcase
-       end
+      always @ ( next_state or current_state or ClkPha )
+        begin
+          case ( next_state )
+// Load the transmit data into Slave shift register
+            IDLE : shift_en <= 1'b0;
+// Make sure that data is available before the leading edge for CPHA=0
+            BEGIN: shift_en <= 1'b0;
+            LEAD : if ( current_state == TRAIL && ClkPha == 1'b1 )
+                     shift_en <= 1'b1;
+                   else
+                     shift_en <= 1'b0;
+            TRAIL: if ( current_state == LEAD && ClkPha == 1'b0 )
+                     shift_en <= 1'b1;
+                   else
+                     shift_en <= 1'b0;
+          endcase
+        end
 
 //    always @ (posedge SClk)
 //      case ( {ClkPol, ClkPha} )
