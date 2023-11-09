@@ -4,7 +4,8 @@ module ram_config(
  input	 logic            clk_sys_i,	//general clock
  input 	 logic            rst_sys_ni,	//general reset
  input	 logic            rx_ack_i,	//read acknowledge input
-
+ input   logic  [31:0]    addr_ini,
+ input   logic  [31:0]    size,
  
  input 	 logic            a_rvalid,
  input   logic	[31:0]    data_in,	//data in
@@ -15,13 +16,13 @@ module ram_config(
  output	 logic            rst_n,	//core reset signal
  output	 logic	[31:0]    addr, 	//ram address
  output	 logic	[31:0]    data_out,	//ram data out
- output  logic	[3:0]     b_en		//byte enable ram
+ output  logic	[3:0]     b_en,		//byte enable ram
+ output  logic            done
 );
  
- reg [31:0] base_addr = 32'h00100000;
+ logic [31:0] base_addr = 32'h00100000;
  logic [31:0] data_next;
- reg   [31:0]    addr_end;
- 
+ logic [3:0]  rst_cnt;
  
  // Define states
  reg [2:0] state; // State variable
@@ -29,8 +30,8 @@ module ram_config(
  localparam RX_ACK = 3'b001;
  localparam DATA_TRANSFER = 3'b010;
  localparam DONE = 3'b011;
- localparam FIRST = 3'b100;
- logic first_cycle = 1'b0;
+ localparam LAST = 3'b100;
+
  
   always_ff @(posedge clk_sys_i or negedge rst_sys_ni) begin
   	if (!rst_sys_ni) begin
@@ -40,17 +41,25 @@ module ram_config(
   		we_o <= 1'b0;
   		req <= 1'b0;
   		rst_n = #4 1'b1;
-  		first_cycle <= 1'b0;
+  		rst_cnt <= 0;
   		state <= IDLE;
   	end else begin
   	  case(state)
   	    IDLE: begin
+  	      addr_end <= addr_ini + size - 1;
   	      if(!empty_ni)	begin
   	        read_enable_o <= 1'b1;
   	        state <= RX_ACK;
   	      end
-  	       if(addr_end == base_addr)
-  	     	rst_n <= 1'b0;
+  	      if(addr_end == base_addr) begin
+  	     	  done <= 1'b1;
+  	     	  base_addr <= 32'h00100000;
+  	     	  rst_cnt <= rst_cnt + 1;
+  	     	end
+  	     	if(rst_cnt == 5) begin
+  	     	  rst_n <= 1'b0;
+  	     	  rst_cnt <= 0;
+  	     	  base_addr <= 32'h00100000;
 		    end
 		    
   	    RX_ACK: begin
@@ -63,13 +72,6 @@ module ram_config(
   	        end
   	      end 
   	    end 
-  	    FIRST: begin
-  	      first_cycle <= 1'b1;
-		      addr_end <= data_in;
-		      state <= DONE;
-		      if (a_rvalid)
-		        state <= IDLE;
-		    end 
   	    DATA_TRANSFER: begin
   	      data_next <= data_in;
   	      addr <= base_addr;
@@ -87,8 +89,10 @@ module ram_config(
 		  	  we_o = 1'b0;
 		  	  data_next = 32'b0;
 		  	  state <= IDLE;
+		  	
   	     end 
-  	    end  
+  	    end
+  	    LAST:  
   	  endcase
 		end   
   end

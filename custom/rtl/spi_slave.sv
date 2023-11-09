@@ -1,9 +1,6 @@
-module spi_slave
-    #(
+module spi_slave #(
       parameter DATA_WIDTH = 8
-     )
-
-    (
+     ) (
       input Clk,                            // System (or FPGA) clock.
       input [1:0] MODE,
       input [DATA_WIDTH-1:0] TxData,        // Transmit Data
