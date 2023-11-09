@@ -4,8 +4,8 @@ module ram_fifo #(
   parameter WIDTH = 32 // Data width of 32 bits
 ) (
 //system clk and rst_n
- input	logic	  clk_sys_i,			//general clock
- input 	logic	  rst_sys_ni,			//general reset
+ input	logic	  clk_sys,			//general clock
+ input 	logic	  rst_sys_n,			//general reset
 
 //Input
  input  	logic   	write_enable_i,	//write enable input
@@ -25,7 +25,7 @@ module ram_fifo #(
   reg [LOG2_DEPTH-1:0] read_ptr;
   reg [LOG2_DEPTH-1:0] count;
 
-  always_ff @(posedge clk_sys_i or negedge rst_sys_ni) begin
+  always_ff @(posedge clk_sys or negedge rst_sys_n) begin
     if (!rst_sys_ni) begin
       write_ptr <= 0;
       read_ptr <= 0;

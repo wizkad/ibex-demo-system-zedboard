@@ -21,6 +21,7 @@ filesets:
       - custom/rtl/ram_fifo.sv
       - custom/rtl/spi_slave.sv
       - custom/rtl/edge_detc.sv
+      - custom/rtl/ram_controller.sv
       - custom/top_ram.sv
     file_type: systemVerilogSource
   files_verilator:

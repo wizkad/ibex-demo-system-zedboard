@@ -1,4 +1,4 @@
-module RAM_Controller #(
+module ram_controller #(
   parameter WIDTH = 32
   ) (
   input logic                 clk_sys,    // Clock input
@@ -8,7 +8,8 @@ module RAM_Controller #(
   input logic   [WIDTH-1:0]   data_in,   // Data input to RAM
   output logic  [WIDTH-1:0]   data_out,  // Data output from RA
   output logic  [WIDTH-1:0]   addr, 
-  output logic  [WIDTH-1:0]   size 
+  output logic  [WIDTH-1:0]   size,
+  output logic                fifo_ready 
 
 );
   
@@ -29,6 +30,7 @@ module RAM_Controller #(
       hold  <= 1'b0;
       cmd   <= 8'h00;
       stored_cmd <= 8'h00;
+      fifo_ready <= 1'b0;
     end else begin
       
       if(!hold & spi_done) begin
@@ -46,7 +48,8 @@ module RAM_Controller #(
             count <= 2'b10;
           end
           if(spi_done && (count == 2'b10)) begin
-            data_out <= data_in;  
+            data_out <= data_in;
+            fifo_ready <= 1'b1;  
           end
           if(pack_done) begin
             count <= 2'b00;
@@ -54,6 +57,7 @@ module RAM_Controller #(
             stored_cmd <= 8'h00;
             addr <= 'b0;
             size <= 'b0;
+            fifo_ready <= 1'b0;
           end  
 
         CMD_READ: 

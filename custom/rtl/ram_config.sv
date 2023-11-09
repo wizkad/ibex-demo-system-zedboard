@@ -1,8 +1,8 @@
 `timescale 1ns/1ps
 module ram_config(
  //general clk and rst_n
- input	 logic            clk_sys_i,	//general clock
- input 	 logic            rst_sys_ni,	//general reset
+ input	 logic            clk_sys,	//general clock
+ input 	 logic            rst_sys_n,	//general reset
  input	 logic            rx_ack_i,	//read acknowledge input
  input   logic  [31:0]    addr_ini,
  input   logic  [31:0]    size,
@@ -33,7 +33,7 @@ module ram_config(
  localparam LAST = 3'b100;
 
  
-  always_ff @(posedge clk_sys_i or negedge rst_sys_ni) begin
+  always_ff @(posedge clk_sys or negedge rst_sys_n) begin
   	if (!rst_sys_ni) begin
   		base_addr <= 32'h00100000;
   		data_next <= 32'b0;
