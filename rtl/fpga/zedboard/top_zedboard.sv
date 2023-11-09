@@ -29,6 +29,8 @@ module top_zedboard (
   logic 				en;
   logic 				req;
   
+  assign IO_RSTN_N = rst_n;
+  
    // Instantiating the Ibex Demo System.
   ibex_demo_system #(
     .GpiWidth(8),
@@ -66,7 +68,9 @@ module top_zedboard (
     .rst_sys_n
   );
 //Ram configurator
-  top_ram u_top_ram(
+  top_ram #(
+    .WIDTH(32)
+  ) u_top_ram(
     //clk rst
     .clk_sys        (clk_sys),
     .rst_sys_n      (rst_sys_n),
@@ -75,7 +79,7 @@ module top_zedboard (
     .SS             (SS),
 	  .MOSI           (MOSI),
 	  .SCLK           (SCLK),
-	  .MODE           (MODE),
+	  .MODE           (2'b01),
     //Output ports
     .MISO           (MISO),
     .data_o         (data_spi),
@@ -85,4 +89,5 @@ module top_zedboard (
     .en_o           (en),
     .req_o          (req) 
   );
+  
 endmodule

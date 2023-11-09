@@ -32,6 +32,15 @@ module spi_host #(
   logic sck, count_at_limit, sck_pos, sck_neg;
 
   logic sck_en;
+  
+   typedef enum logic[1:0] {
+    IDLE,
+    START,
+    SEND,
+    STOP
+  } spi_state_t;
+ spi_state_t state_q, state_d;
+ 
   assign sck_en = (state_q == SEND);
 
   assign limit = CountWidth'(ToggleCount - 1);
@@ -62,14 +71,7 @@ module spi_host #(
   // Set to HIGH at the negedge of the serial clock, used internally.
   assign sck_neg = count_at_limit && sck;
 
-  typedef enum logic[1:0] {
-    IDLE,
-    START,
-    SEND,
-    STOP
-  } spi_state_t;
-
-  spi_state_t state_q, state_d;
+ 
 
   logic [2:0] bit_counter_q, bit_counter_d;
   logic [7:0] current_byte_q, current_byte_d, recieved_byte_d, recieved_byte_q;

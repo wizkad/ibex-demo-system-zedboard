@@ -1,6 +1,7 @@
+ /* verilator lint_off WIDTH */
 module ram_fifo #(
-  DEPTH = 16, // Depth of the circular FIFO
-  WIDTH = 32 // Data width of 32 bits
+  parameter DEPTH = 16, // Depth of the circular FIFO
+  parameter WIDTH = 32 // Data width of 32 bits
 ) (
 //system clk and rst_n
  input	logic	  clk_sys_i,			//general clock
@@ -17,17 +18,18 @@ module ram_fifo #(
  output		logic	[31:0]  data_out	//data out
 );
 
+  localparam LOG2_DEPTH = $clog2(DEPTH);
   
   reg [WIDTH-1:0] fifo [0:DEPTH-1];
-  reg [3:0] write_ptr;
-  reg [3:0] read_ptr;
-  reg [3:0] count;
+  reg [LOG2_DEPTH-1:0] write_ptr;
+  reg [LOG2_DEPTH-1:0] read_ptr;
+  reg [LOG2_DEPTH-1:0] count;
 
   always_ff @(posedge clk_sys_i or negedge rst_sys_ni) begin
     if (!rst_sys_ni) begin
-      write_ptr <= 4'b0000;
-      read_ptr <= 4'b0000;
-      count <= 4'b0000;
+      write_ptr <= 0;
+      read_ptr <= 0;
+      count <= 0;
       rx_ack_o <= 1'b0;
     end else begin
       if (write_enable_i) begin
@@ -35,8 +37,10 @@ module ram_fifo #(
           fifo[write_ptr] <= data_in;
           write_ptr <= write_ptr + 1;
           count <= count + 1;
+         
           if (write_ptr == DEPTH-1) begin
             write_ptr <= 0;
+          
           end
         end
       end
@@ -60,3 +64,4 @@ module ram_fifo #(
   assign full_o = (count == DEPTH);
 
 endmodule
+/* verilator lint_on WIDTH */

@@ -1,5 +1,5 @@
 module top_ram #(
-	parameter 					WIDTH = 32
+	parameter 	WIDTH = 32
 ) (
 	input logic     	  clk_sys,
 	input logic     	  rst_sys_n,

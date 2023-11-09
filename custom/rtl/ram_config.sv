@@ -1,4 +1,4 @@
-`timescale 1ns/1ps 
+`timescale 1ns/1ps
 module ram_config(
  //general clk and rst_n
  input	 logic            clk_sys_i,	//general clock
@@ -18,7 +18,7 @@ module ram_config(
  output  logic	[3:0]     b_en		//byte enable ram
 );
  
- reg [31:0] base_addr = 32'h0010000;
+ reg [31:0] base_addr = 32'h00100000;
  logic [31:0] data_next;
  reg   [31:0]    addr_end;
  
@@ -34,12 +34,12 @@ module ram_config(
  
   always_ff @(posedge clk_sys_i or negedge rst_sys_ni) begin
   	if (!rst_sys_ni) begin
-  		base_addr <= 32'h00000000;
+  		base_addr <= 32'h00100000;
   		data_next <= 32'b0;
   		read_enable_o <= 1'b0;
   		we_o <= 1'b0;
   		req <= 1'b0;
-  		rst_n <= #4 1'b1;
+  		rst_n = #4 1'b1;
   		first_cycle <= 1'b0;
   		state <= IDLE;
   	end else begin
@@ -65,16 +65,16 @@ module ram_config(
   	    end 
   	    FIRST: begin
   	      first_cycle <= 1'b1;
-		      addr_end = data_in;
+		      addr_end <= data_in;
 		      state <= DONE;
 		      if (a_rvalid)
 		        state <= IDLE;
 		    end 
   	    DATA_TRANSFER: begin
-  	      data_next = data_in;
-  	      addr = base_addr;
-	        data_out =  data_next;
-	        b_en = 4'hF;
+  	      data_next <= data_in;
+  	      addr <= base_addr;
+	        data_out <=  data_next;
+	        b_en <= 4'hF;
 	        req = 1'b1;
 	        req = #1 1'b0;
 	        we_o = #1 1'b1;
@@ -83,9 +83,9 @@ module ram_config(
 		    
   	    DONE: begin
   	     if (a_rvalid) begin
-		  	  base_addr <= base_addr + 4;
-		  	  we_o <= 1'b0;
-		  	  data_next <= 32'b0;
+		  	  base_addr = base_addr + 4;
+		  	  we_o = 1'b0;
+		  	  data_next = 32'b0;
 		  	  state <= IDLE;
   	     end 
   	    end  

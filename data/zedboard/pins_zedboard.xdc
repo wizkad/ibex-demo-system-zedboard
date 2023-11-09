@@ -9,10 +9,10 @@ set_property  PACKAGE_PIN Y9     [get_ports { IO_CLK }];
 create_clock -add -name sys_clk_pin -period 10.00 -waveform {0 5} [get_ports { IO_CLK }];
 
 ## Switches
-set_property -dict { PACKAGE_PIN F22    IOSTANDARD LVCMOS18 }  [get_ports { SW[0] }]; #SW0
-set_property -dict { PACKAGE_PIN G22    IOSTANDARD LVCMOS18 }  [get_ports { SW[1] }]; #SW1
-set_property -dict { PACKAGE_PIN H22    IOSTANDARD LVCMOS18 }  [get_ports { SW[2] }]; #SW2
-set_property -dict { PACKAGE_PIN F21    IOSTANDARD LVCMOS18 }  [get_ports { SW[3] }]; #SW3
+set_property  PACKAGE_PIN F22      [get_ports { SW[0] }]; #SW0
+set_property  PACKAGE_PIN G22      [get_ports { SW[1] }]; #SW1
+set_property  PACKAGE_PIN H22      [get_ports { SW[2] }]; #SW2
+set_property  PACKAGE_PIN F21      [get_ports { SW[3] }]; #SW3
 #set_property -dict { PACKAGE_PIN H19    IOSTANDARD LVCMOS18 } [get_ports {  }]; #SW4
 #set_property -dict { PACKAGE_PIN H18    IOSTANDARD LVCMOS18 } [get_ports {  }]; #SW5
 #set_property -dict { PACKAGE_PIN H17    IOSTANDARD LVCMOS18 } [get_ports {  }]; #SW6
@@ -32,21 +32,21 @@ set_property -dict { PACKAGE_PIN F21    IOSTANDARD LVCMOS18 }  [get_ports { SW[3
 #set_property -dict { PACKAGE_PIN K1    IOSTANDARD LVCMOS33 } [get_ports { led3_r }]; #IO_L23N_T3_35 Sch=led3_r
 
 ## LEDs
-set_property  PACKAGE_PIN T22     [get_ports { LED[0] }];
-set_property  PACKAGE_PIN T21     [get_ports { LED[1] }];
-set_property  PACKAGE_PIN U22     [get_ports { LED[2] }];
-set_property  PACKAGE_PIN U21     [get_ports { LED[3] }];
-set_property  PACKAGE_PIN V22     [get_ports { LED[4] }];
-set_property  PACKAGE_PIN W22     [get_ports { LED[5] }];
-set_property  PACKAGE_PIN U19     [get_ports { LED[6] }];
-set_property  PACKAGE_PIN U14     [get_ports { LED[7] }];
+set_property  PACKAGE_PIN T22     [get_ports { LED[0] }]; #LD0
+set_property  PACKAGE_PIN T21     [get_ports { LED[1] }]; #LD1
+set_property  PACKAGE_PIN U22     [get_ports { LED[2] }]; #LD2
+set_property  PACKAGE_PIN U21     [get_ports { LED[3] }]; #LD3
+set_property  PACKAGE_PIN V22     [get_ports { LED[4] }]; #LD4
+set_property  PACKAGE_PIN W22     [get_ports { LED[5] }]; #LD5
+set_property  PACKAGE_PIN U19     [get_ports { LED[6] }]; #LD6
+set_property  PACKAGE_PIN U14     [get_ports { LED[7] }]; #LD7
 
 ## Buttons
-set_property  PACKAGE_PIN N15     [get_ports { BTN[0] }]; #IO_L6N_T0_VREF_16 Sch=btn[0]
-set_property  PACKAGE_PIN P16     [get_ports { BTN[1] }]; #IO_L11P_T1_SRCC_16 Sch=btn[1]
-set_property  PACKAGE_PIN R16     [get_ports { BTN[2] }]; #IO_L11N_T1_SRCC_16 Sch=btn[2]
-set_property  PACKAGE_PIN R18     [get_ports { BTN[3] }]; #IO_L12P_T1_MRCC_16 Sch=btn[3]
-
+set_property  PACKAGE_PIN N15     [get_ports { BTN[0] }]; #BTNL
+set_property  PACKAGE_PIN P16     [get_ports { BTN[1] }]; #BTNC
+set_property  PACKAGE_PIN R16     [get_ports { BTN[2] }]; #BTND
+set_property  PACKAGE_PIN R18     [get_ports { BTN[3] }]; #BTNR
+set_property  PACKAGE_PIN T18     [get_ports { IO_RSTN_N }]; #BTNU
 ## Pmod Header JA
 set_property  PACKAGE_PIN Y11     [get_ports { UART_RX }]; #JA1
 set_property  PACKAGE_PIN AA11    [get_ports { UART_TX }]; #JA2 
@@ -58,12 +58,12 @@ set_property  PACKAGE_PIN AA11    [get_ports { UART_TX }]; #JA2
 #set_property -dict { PACKAGE_PIN AA8    IOSTANDARD LVCMOS33 } [get_ports {  }]; #JA10
 
 ## Pmod Header JB
-set_property -dict { PACKAGE_PIN W12   IOSTANDARD LVCMOS33 } [get_ports { SS }]; #JB1
-set_property -dict { PACKAGE_PIN W11   IOSTANDARD LVCMOS33 } [get_ports { SCLK }]; #JB2
-set_property -dict { PACKAGE_PIN V10   IOSTANDARD LVCMOS33 } [get_ports { MISO }]; #JB3
-set_property -dict { PACKAGE_PIN W8    IOSTANDARD LVCMOS33 } [get_ports { MOSI }]; #JB4
-set_property -dict { PACKAGE_PIN V12   IOSTANDARD LVCMOS33 } [get_ports { MODE[0] }]; #JB7
-set_property -dict { PACKAGE_PIN W10   IOSTANDARD LVCMOS33 } [get_ports { MODE[1] }]; #JB8
+set_property  PACKAGE_PIN W12    [get_ports { SS }]; #JB1
+set_property  PACKAGE_PIN W11    [get_ports { SCLK }]; #JB2
+set_property  PACKAGE_PIN V10    [get_ports { MISO }]; #JB3
+set_property  PACKAGE_PIN W8     [get_ports { MOSI }]; #JB4
+set_property  PACKAGE_PIN V12    [get_ports { MODE[0] }]; #JB7
+set_property  PACKAGE_PIN W10    [get_ports { MODE[1] }]; #JB8
 #set_property -dict { PACKAGE_PIN V9    IOSTANDARD LVCMOS33 } [get_ports {  }]; #JB9
 #set_property -dict { PACKAGE_PIN V8    IOSTANDARD LVCMOS33 } [get_ports {  }]; #JB10
 
@@ -224,4 +224,5 @@ set_property -dict { PACKAGE_PIN W10   IOSTANDARD LVCMOS33 } [get_ports { MODE[1
  
 set_property IOSTANDARD LVCMOS33 [get_ports -of_objects [get_iobanks 33]];
 set_property IOSTANDARD LVCMOS18 [get_ports -of_objects [get_iobanks 34]];
+set_property IOSTANDARD LVCMOS18 [get_ports -of_objects [get_iobanks 35]];
 set_property IOSTANDARD LVCMOS33 [get_ports -of_objects [get_iobanks 13]];
