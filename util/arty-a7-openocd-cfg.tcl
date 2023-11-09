@@ -11,12 +11,14 @@ ftdi_channel 0
 ftdi_layout_init 0x0088 0x008b
 reset_config none
 
+
+
 # Configure JTAG chain and the target processor
 set _CHIPNAME riscv
 
 # Configure JTAG expected ID
 # arty-a7-35t
-set _EXPECTED_ID 0x0362D093 
+set _EXPECTED_ID 0x0362D093  
 # arty-a7-100t
 # set _EXPECTED_ID 0x13631093 
 
@@ -30,7 +32,7 @@ riscv set_ir dmi 0x23
 
 adapter speed 10000
 
-riscv set_prefer_sba on
+# riscv set_prefer_sba on
 gdb_report_data_abort enable
 gdb_report_register_access_error enable
 gdb_breakpoint_override hard

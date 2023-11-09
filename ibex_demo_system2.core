@@ -14,12 +14,15 @@ filesets:
       - lowrisc:ibex:fpga_xilinx_shared
     files:
       - rtl/fpga/zedboard/top_zedboard.sv
+    file_type: systemVerilogSource
+  files_custom:
+    files:
       - custom/rtl/ram_config.sv
       - custom/rtl/ram_fifo.sv
-      - custom/rtl/slave.sv
+      - custom/rtl/spi_slave.sv
+      - custom/rtl/edge_detc.sv
       - custom/top_ram.sv
     file_type: systemVerilogSource
-
   files_verilator:
     depend:
       - lowrisc:ibex:sim_shared
@@ -31,13 +34,19 @@ filesets:
       - dv/verilator/ibex_demo_system.h:  { file_type: cppSource, is_include_file: true}
       - dv/verilator/ibex_demo_system_main.cc: { file_type: cppSource }
       - dv/verilator/demo_system_verilator_lint.vlt:  { file_type: vlt }
-
   files_constraints:
     files:
       - data/zedboard/pins_zedboard.xdc
     file_type: xdc
-
-
+  files_modelsim:
+    files:
+      - custom/sim/testbench.sv
+      - custom/sim/spi_module.sv
+      - custom/sim/pos_edge_det.sv
+      - custom/sim/neg_edge_det.sv
+      - custom/sim/clock_divider.sv
+      - vendor/pulp_riscv_dbg/src/dmi_jtag_tap.sv
+    file_type: systemVerilogSource
 parameters:
   # XXX: This parameter needs to be absolute, or relative to the *.runs/synth_1
   # directory. It's best to pass it as absolute path when invoking fusesoc, e.g.
@@ -67,6 +76,7 @@ targets:
     filesets_append:
       - files_xilinx
       - files_constraints
+      - files_custom
     toplevel: top_zedboard
     tools:
       vivado:
@@ -101,3 +111,19 @@ targets:
           - "--unroll-count 72"
     parameters:
       - PRIM_DEFAULT_IMPL=prim_pkg::ImplGeneric
+  sim2:
+    <<: *default_target
+    default_tool: modelsim
+    filesets_append:
+      - files_custom
+      - files_xilinx
+      - files_modelsim
+    tools: 
+      modelsim:
+        vlog_options:
+          - -timescale=1ns/1ps
+        vsim_options:
+          - "+vcdfile=my_trace.vcd"
+    toplevel: testbench
+
+      
